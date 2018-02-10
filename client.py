@@ -5,7 +5,9 @@ import sys
 import ssl
 
 
-SERVER_ADDRESS = (str(sys.argv[1]), 6215)
+SERVER_ADDRESS = ("mitchandlauren.dynu.net", 6215)
+
+PHONE_NUMBER = "9252026215"  # Max 15 character. Example: +1 234 567 890 1234
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -23,11 +25,12 @@ async def write(writer):
         sys.stdout.flush()
         line = await event_loop.run_in_executor(None, sys.stdin.readline)
         # HERE ##############################
-        writer.write(b'0')
+        writer.write(PHONE_NUMBER.encode().rjust(15, b'\x00'))
         writer.write(bytes([len(line)]).rjust(4, b'\x00'))
         writer.write(line.encode())
         
         await writer.drain()
+
 
 async def read(reader):
     while True:
@@ -37,8 +40,9 @@ async def read(reader):
         if data:
             sys.stdout.write(data.decode())
             sys.stdout.flush()
-        
-async def echo_client(address, messages):
+
+
+async def echo_client(address):
     log = logging.getLogger('echo_client')
 
     log.debug('connecting to {} port {}'.format(*address))
@@ -62,7 +66,7 @@ async def echo_client(address, messages):
 
 try:
     event_loop.run_until_complete(
-        echo_client(SERVER_ADDRESS, MESSAGES)
+        echo_client(SERVER_ADDRESS)
     )
 finally:
     log.debug('closing event loop')
